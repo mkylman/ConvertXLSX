@@ -17,7 +17,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Linq.Expressions;
 
-namespace Student_List
+namespace ConvertXLSX
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
