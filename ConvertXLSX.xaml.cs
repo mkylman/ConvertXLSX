@@ -103,6 +103,7 @@ namespace ConvertXLSX
                                 date[2] = date[2].Substring(2); // trim year to YY
                                 split[1] = String.Join("", date); // reassemble
                             }
+                            Array.Resize(ref split, split.Length - 1); // drop the last element (vendor id)
                             split = prepend.ToList().Concat(split.ToList()).ToArray();
                             line = String.Join(",", split);
                             lines.Add(line);

@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="StudentData.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Spire.XLS" Version="14.2.1" />
   </ItemGroup>
 
