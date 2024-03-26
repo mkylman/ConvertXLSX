@@ -24,8 +24,8 @@ namespace ConvertXLSX
     /// </summary>
     public partial class MainWindow : Window
     {
-        String filename;
-        String newfilename;
+        String xlsx_filename;
+        String csv_filename;
 
         public MainWindow()
         {
@@ -38,28 +38,28 @@ namespace ConvertXLSX
             openFileDialog.Filter = "Excel|*.xlsx|Excel|*.xls";
             if (openFileDialog.ShowDialog() == true)
             {
-                filename = openFileDialog.FileName;
+                xlsx_filename = openFileDialog.FileName;
             }
         }
 
         private void btnConvert_Click(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrEmpty(filename))
+            if (String.IsNullOrEmpty(xlsx_filename))
             {
                 MessageBox.Show("Please pick an Excel file to convert first");
             }
             else
             {
                 Workbook workbook = new Workbook();
-                workbook.LoadFromFile(filename);
+                workbook.LoadFromFile(xlsx_filename);
                 Worksheet sheet = workbook.Worksheets[0];
 
                 SaveFileDialog saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Filter = "CSV|*.csv";
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    newfilename = saveFileDialog.FileName;
-                    sheet.SaveToFile(newfilename, ",", Encoding.UTF8);
+                    csv_filename = saveFileDialog.FileName;
+                    sheet.SaveToFile(csv_filename, ",", Encoding.UTF8);
                 }
             }            
         }
@@ -67,7 +67,7 @@ namespace ConvertXLSX
         private void btnInsert_Click(object sender, RoutedEventArgs e)
         {
 
-            if (String.IsNullOrEmpty(newfilename))
+            if (String.IsNullOrEmpty(csv_filename))
             {
                 MessageBox.Show("No converted CSV file found");
             }
@@ -80,7 +80,7 @@ namespace ConvertXLSX
                 List<String> lines = new List<String>();
                 String[] prepend = { txtStatus.Text, txtAccount.Text };
 
-                using (StreamReader reader = new StreamReader(newfilename))
+                using (StreamReader reader = new StreamReader(csv_filename))
                 {
                     String line;
                     bool first_line = true;
@@ -112,12 +112,19 @@ namespace ConvertXLSX
                     }
                 }
 
-                using (StreamWriter writer = new StreamWriter(newfilename, false))
+                using (StreamWriter writer = new StreamWriter(csv_filename, false))
                 {
                     foreach (String line in lines)
                         writer.WriteLine(line);
                 }
                 MessageBox.Show("Done - please review your file to verify");
+                // code to open the file
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = csv_filename,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
             }
         }
     }
