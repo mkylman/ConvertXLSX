@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Linq.Expressions;
+using System.Security.Principal;
 
 namespace ConvertXLSX
 {
@@ -77,49 +78,37 @@ namespace ConvertXLSX
             }
             else
             {
-                List<String> lines = new List<String>();
-                String[] prepend = { txtStatus.Text, txtAccount.Text };
+                List<string> lines = new List<string>();
+                string[] prepend = { txtStatus.Text, txtAccount.Text };
 
-                using (StreamReader reader = new StreamReader(csv_filename))
+                // Read all lines from the file
+                string[] allLines = File.ReadAllLines(csv_filename);
+                // Skip the first line (headers) and process the rest
+                var processedLines = allLines.Skip(1).Select(line =>
                 {
-                    String line;
-                    bool first_line = true;
-
-                    while ((line = reader.ReadLine()) != null)
+                    string[] split = line.Split(',');
+                    // Check if the field is in MM/DD/YYYY format and convert it to MMDDYY
+                    if (split[1].Contains('/'))
                     {
-                        if (first_line == false) // First line in file will be headers, which we don't want
-                        {
-                            String[] split = line.Split(',');
-                            if (split[1].Contains('/')) // check if the field is mM/dD/YYYY
-                            {
-                                String[] date = split[1].Split('/');
-                                for (int i = 0; i < 2; i++)
-                                {
-                                    if (date[i].Length < 2) // add leading zeroes for MMDDYY format
-                                    {
-                                        date[i] = "0" + date[i];
-                                    }
-                                }
-                                date[2] = date[2].Substring(2); // trim year to YY
-                                split[1] = String.Join("", date); // reassemble
-                            }
-                            split[split.Length - 3] = split[split.Length - 1]; // swap the vendor id and check amounts
-                            Array.Resize(ref split, split.Length - 1); // drop the last element (vendor id)
-                            split = prepend.ToList().Concat(split.ToList()).ToArray();
-                            line = String.Join(",", split);
-                            lines.Add(line);
-                        } else { first_line = false; }
+                        string[] date = split[1].Split('/');
+                        date[0] = date[0].PadLeft(2, '0'); // Add leading zero for month
+                        date[1] = date[1].PadLeft(2, '0'); // Add leading zero for day
+                        date[2] = date[2].Substring(2);    // Trim year to YY
+                        split[1] = string.Concat(date);    // Reassemble
                     }
-                }
+                    // Overwrite the vendor id with check amount
+                    split[^3] = split[^1];
+                    // Drop the last element
+                    return prepend.Concat(split.Take(split.Length - 1));
+                });
 
-                using (StreamWriter writer = new StreamWriter(csv_filename, false))
-                {
-                    foreach (String line in lines)
-                        writer.WriteLine(line);
-                }
+                // Write the processed lines back to the file
+                File.WriteAllLines(csv_filename, processedLines.Select(split => string.Join(",", split)));
+
                 MessageBox.Show("Done - please review your file to verify");
-                // code to open the file
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+
+                // Code to open the file
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = csv_filename,
                     UseShellExecute = true,

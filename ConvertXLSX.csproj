@@ -5,10 +5,15 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <RootNamespace>ConvertXLSX</RootNamespace>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>ConvertXLSX_2.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="StudentData.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="ConvertXLSX_2.ico" />
   </ItemGroup>
 
   <ItemGroup>
