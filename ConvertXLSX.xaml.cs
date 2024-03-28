@@ -27,6 +27,14 @@ namespace ConvertXLSX
     {
         String xlsx_filename;
         String csv_filename;
+        public enum Header : int
+        {
+            CHECK_NUM,
+            CHECK_DATE,
+            VENDOR,
+            NAME,
+            CHECK_AMT
+        }
 
         public MainWindow()
         {
@@ -60,14 +68,13 @@ namespace ConvertXLSX
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     csv_filename = saveFileDialog.FileName;
-                    sheet.SaveToFile(csv_filename, ",", Encoding.UTF8);
+                    sheet.SaveToFile(csv_filename, "|", Encoding.UTF8); // switch to | instead of , for error checking
                 }
             }            
         }
 
         private void btnInsert_Click(object sender, RoutedEventArgs e)
         {
-
             if (String.IsNullOrEmpty(csv_filename))
             {
                 MessageBox.Show("No converted CSV file found");
@@ -84,18 +91,29 @@ namespace ConvertXLSX
                 // Read all lines from the file
                 string[] allLines = File.ReadAllLines(csv_filename);
                 // Skip the first line (headers) and process the rest
+                // Headers should match enum Headers
                 var processedLines = allLines.Skip(1).Select(line =>
                 {
-                    string[] split = line.Split(',');
+                    string[] split = line.Split('|');
+
                     // Check if the field is in MM/DD/YYYY format and convert it to MMDDYY
-                    if (split[1].Contains('/'))
+                    if (split[(int)Header.CHECK_DATE].Contains('/'))
                     {
-                        string[] date = split[1].Split('/');
+                        string[] date = split[(int)Header.CHECK_DATE].Split('/');
                         date[0] = date[0].PadLeft(2, '0'); // Add leading zero for month
                         date[1] = date[1].PadLeft(2, '0'); // Add leading zero for day
                         date[2] = date[2].Substring(2);    // Trim year to YY
-                        split[1] = string.Concat(date);    // Reassemble
+                        split[(int)Header.CHECK_DATE] = string.Concat(date);    // Reassemble
                     }
+
+                    // Check that the name field doesn't have commas
+                    if (split[(int)Header.NAME].Contains(','))
+                    {
+                        string[] name = split[(int)Header.NAME].Split(',');
+                        name[1] = string.Concat(name[1].Split()); // remove whitespace (thank you stackoverflow)
+                        split[(int)Header.NAME] = name[1] + " " + name[0];
+                    }
+
                     // Overwrite the vendor id with check amount
                     split[^3] = split[^1];
                     // Drop the last element
